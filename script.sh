@@ -9,6 +9,7 @@ NODE_VERSION="22.9.0"
 DB_USER="java_user"
 DB_PASSWORD="12345"
 DB_NAME="java_db"
+PORT_API="80"
 
    echo "Проверяем наличие  PostgreSQL..."
     if psql -V 2>/dev/null | grep -q "PostgreSQL"; then
@@ -43,10 +44,18 @@ DB_NAME="java_db"
 EOF
    echo "Пользователь $DB_USER и база данных $DB_NAME успешно созданы."
 
-   echo "Проверяем наличие Nginx ..."
-    if nginx -v 2>&1 | grep -q "nginx version"; then
+    echo "Настройка прав доступа к схеме Public пользователя $DB_USER"
+    sudo -u postgres psql -U postgres -d java_db <<EOF
+    GRANT ALL ON SCHEMA public TO $DB_USER ;
+    GRANT CREATE ON SCHEMA public TO $DB_USER;
+    ALTER SCHEMA public OWNER TO $DB_USER;
+EOF
+   echo "Права доступа к схеме Public пользователя $DB_USER успешно созданы."
+
+    echo "Проверяем наличие Nginx ..."
+     if nginx -v 2>&1 | grep -q "nginx version"; then
         echo "$(nginx -v) уже установлен."
-    else
+     else
         echo "Устанавливаем Nginx ..."
         #sudo apt update
         sudo apt install -y nginx
@@ -54,7 +63,7 @@ EOF
         sudo systemctl start nginx
         echo "Nginx установлен."
     fi
-    
+
     echo "Проверяем наличие  Redis..."
       if redis-server -v 2>/dev/null | grep -q "Redis server"; then
         echo "$(redis-server -v) уже установлен."
@@ -87,7 +96,6 @@ EOF
            echo "export PATH=$PATH:/opt/gradle/gradle-$GRADLE_VERSION/bin" >> ~/.bashrc
            source ~/.bashrc
            echo "Устанавливаем Gradle $GRADLE_VERSION ..."
-        
       else
         #sudo apt update
         wget https://services.gradle.org/distributions/gradle-$GRADLE_VERSION-all.zip
@@ -111,21 +119,35 @@ EOF
         echo "Gradle $GRADLE_VERSION установлен."
       fi
     
-    #Продумать выгрузку
+    #Продумать выгрузку настроить if
     echo "Выгрузка репозитория"
-      git clone $REPOSITORY $DIR_APP 2>/dev/null
+      if [ -e "$DIR_APP" ]; then
+        echo "Репозиторий уже существует"
+      else
+        git clone $REPOSITORY $DIR_APP
+      fi
+
+
+    #Корректировка .env файла для фронтенда
+    IP=$(hostname -I | awk '{print $1}')
+
+    # Обновляем значение REACT_APP_API_URL в файле .env
+    sed -i "s|^REACT_APP_API_URL=.*|REACT_APP_API_URL=$IP|" $DIR_APP/front-end/.env
+
+
+
+    echo "Файл .env обновлен: REACT_APP_API_URL=$IP"
 
 
 
     echo "Сборка и старт front-end side"
-    cd $DIR_APP/front-end && npm install && npm run build
-    sudo mkdir -p /var/www/linuxwebserver
-    sudo cp -r build/* /var/www/linuxwebserver
-    sudo cp ~/$DIR_APP/configNginx80 /etc/nginx/sites-available/default 
-    sudo nginx -s reload
+      cd $DIR_APP/front-end && npm install && npm run build
+      sudo mkdir -p /var/www/linuxwebserver
+      sudo cp -r build/* /var/www/linuxwebserver
+      sudo cp ~/$DIR_APP/configNginx80 /etc/nginx/sites-available/default 
+      sudo nginx -s reload
 
-# echo "Сборка и старт front-back"
-#    cd - 
-#    cd $DIR_APP/back-end && gradle bootJar
-#    env $(cat .env | xargs) java -jar build/libs/ci-back-end-0.0.1-SNAPSHOT.jar
+    echo "Сборка и старт front-back"
+      cd ~/$DIR_APP/back-end && gradle bootJar
+      env $(cat .env | xargs) java -jar build/libs/ci-back-end-0.0.1-SNAPSHOT.jar
 
