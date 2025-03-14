@@ -34,4 +34,8 @@ Vagrant.configure("2") do |config|
     sudo apt install -y mc
     SHELL
 
+    # Инсталляция файлового менеджера MC
+    config.vm.provision "shell", inline: <<-SHELL
+    cp /vagrant/*.zip /home/user
+    SHELL
 end

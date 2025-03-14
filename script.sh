@@ -48,7 +48,7 @@ EOF
         echo "$(nginx -v) уже установлен."
     else
         echo "Устанавливаем Nginx ..."
-        sudo apt update
+        #sudo apt update
         sudo apt install -y nginx
         sudo systemctl enable nginx
         sudo systemctl start nginx
@@ -60,7 +60,7 @@ EOF
         echo "$(redis-server -v) уже установлен."
       else
         echo "Устанавливаем Redis ..."
-        sudo apt update
+        #sudo apt update
         sudo apt install -y redis-server
         sudo systemctl start redis.service
         echo "Redis-server установлен."
@@ -110,7 +110,8 @@ EOF
         nvm install $NODE_VERSION
         echo "Gradle $GRADLE_VERSION установлен."
       fi
-
+    
+    #Продумать выгрузку
     echo "Выгрузка репозитория"
       git clone $REPOSITORY $DIR_APP 2>/dev/null
 
