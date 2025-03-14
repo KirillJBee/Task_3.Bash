@@ -1,15 +1,21 @@
 #!/bin/bash
 
+#Переменные скрипта
+#Переменные 
 PG_VERSION="17"
 JAVA_VERSION_JDK="21"
 GRADLE_VERSION="8.5"
-REPOSITORY="https://github.com/KirillJBee/Task_2.LinuxWebServer.git"
+REPOSITORY="https://github.com/KirillJBee/Task_3.LinuxWebServer.git"
 DIR_APP="LinuxWebServer"
 NODE_VERSION="22.9.0"
+
+
 DB_USER="java_user"
 DB_PASSWORD="12345"
 DB_NAME="java_db"
 PORT_API="80"
+
+
 
    echo "Проверяем наличие  PostgreSQL..."
     if psql -V 2>/dev/null | grep -q "PostgreSQL"; then
@@ -128,15 +134,25 @@ EOF
       fi
 
 
-    #Корректировка .env файла для фронтенда
-    IP=$(hostname -I | awk '{print $1}')
+    #Корректируем .env файла для фронтенда
 
-    # Обновляем значение REACT_APP_API_URL в файле .env
-    sed -i "s|^REACT_APP_API_URL=.*|REACT_APP_API_URL=$IP|" $DIR_APP/front-end/.env
+    IP=$(hostname -I | awk '{print $2}')
+    #Устанавливаем значение REACT_APP_API_URL в файле .env
+    sed -i "s|^REACT_APP_API_URL=.*|REACT_APP_API_URL=http://$IP|" $DIR_APP/front-end/.env
+    #Устанавливаем значение REACT_APP_API_PORT в файле .env
+    sed -i "s|^REACT_APP_API_PORT=.*|REACT_APP_API_PORT=$PORT_API|" $DIR_APP/front-end/.env
 
+    echo "Файл .env обновлен: REACT_APP_API_URL=http://$IP  REACT_APP_API_PORT=$PORT_API"
+    
+    #Корректируем .env файла для бэкэнда
 
+    IP=$(hostname -I | awk '{print $2}')
+    #Устанавливаем значение REACT_APP_API_URL в файле .env
+    sed -i "s|^REACT_APP_API_URL=.*|REACT_APP_API_URL=http://$IP|" $DIR_APP/front-end/.env
+    #Устанавливаем значение REACT_APP_API_PORT в файле .env
+    sed -i "s|^REACT_APP_API_PORT=.*|REACT_APP_API_PORT=$PORT_API|" $DIR_APP/front-end/.env
 
-    echo "Файл .env обновлен: REACT_APP_API_URL=$IP"
+    echo "Файл .env обновлен: REACT_APP_API_URL=http://$IP  REACT_APP_API_PORT=$PORT_API"
 
 
 
