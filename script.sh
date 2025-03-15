@@ -1,20 +1,25 @@
 #!/bin/bash
 
 #Переменные скрипта
-#Переменные 
+
+#Перменные для инсталляции окружения
 PG_VERSION="17"
 JAVA_VERSION_JDK="21"
 GRADLE_VERSION="8.5"
+NODE_VERSION="22.9.0"
 REPOSITORY="https://github.com/KirillJBee/Task_3.LinuxWebServer.git"
 DIR_APP="LinuxWebServer"
-NODE_VERSION="22.9.0"
 
 
+#Перменные для настройки базы данных и .env бэкэнда
 DB_USER="java_user"
 DB_PASSWORD="12345"
 DB_NAME="java_db"
-PORT_API="80"
+DB_BACKUP="sample_db.sql"
 
+#Настройки окружения фронтэнд
+PORT_API="80"
+PROTOCOL="http"
 
 
    echo "Проверяем наличие  PostgreSQL..."
@@ -148,11 +153,11 @@ EOF
 
     IP=$(hostname -I | awk '{print $2}')
     #Устанавливаем значение REACT_APP_API_URL в файле .env
-    sed -i "s|^REACT_APP_API_URL=.*|REACT_APP_API_URL=http://$IP|" $DIR_APP/front-end/.env
+    sed -i "s|^REACT_APP_API_URL=.*|REACT_APP_API_URL=$PROTOCOL://$IP|" $DIR_APP/front-end/.env
     #Устанавливаем значение REACT_APP_API_PORT в файле .env
     sed -i "s|^REACT_APP_API_PORT=.*|REACT_APP_API_PORT=$PORT_API|" $DIR_APP/front-end/.env
 
-    echo "Файл .env обновлен: REACT_APP_API_URL=http://$IP  REACT_APP_API_PORT=$PORT_API"
+    echo "Файл .env обновлен: REACT_APP_API_URL=$PROTOCOL://$IP  REACT_APP_API_PORT=$PORT_API"
 
 
 
@@ -166,4 +171,10 @@ EOF
     echo "Сборка и старт front-back"
       cd ~/$DIR_APP/back-end && gradle bootJar
       env $(cat .env | xargs) java -jar build/libs/ci-back-end-0.0.1-SNAPSHOT.jar
+
+    echo "Экспорт базы данных примеров постов"
+      export PGPASSWORD="$DB_PASSWORD" && psql -U $DB_USER -h localhost -d $DB_NAME -f $DB_BACKUP 2 > /dev/null
+      
+
+    
 

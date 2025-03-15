@@ -37,5 +37,6 @@ Vagrant.configure("2") do |config|
     # Перенос скачаного архива gradle-8.5-all.zip для ускорения процесса инсталляции :-)
     config.vm.provision "shell", inline: <<-SHELL
     cp /vagrant/*.zip /home/user
+    cp /vagrant/*.sql /home/user
     SHELL
 end
