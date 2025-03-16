@@ -22,7 +22,6 @@ PORT_API="443"
 PROTOCOL="https"
 SERVER_PORT="8081"
 
-
 # Параметры для самоподписанного сертификата TLS
 DOMAIN="linuxwebserver.com"
 DAYS=365
