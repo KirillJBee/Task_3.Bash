@@ -27,7 +27,7 @@ PROTOCOL="http"
         echo "$(psql -V) уже установлен."
     else
         echo "Устанавливаем PostgreSQL ..."
-        sudo apt update
+        sudo apt update > /dev/null
         sudo apt install -y curl ca-certificates gnupg
 
         # Import the repository signing key:
@@ -38,11 +38,11 @@ PROTOCOL="http"
         sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
 
         # Update the package lists:
-        sudo apt update
+        sudo apt update > /dev/null
 
         # Install the latest version of PostgreSQL:
         #If you want a specific version, use 'postgresql-16' or similar instead of 'postgresql'
-        sudo apt -y install postgresql-$PG_VERSION
+        sudo apt -y install postgresql-$PG_VERSION > /dev/null
         sudo systemctl start postgresql
         echo "PostgreSQL $PG_VERSION установлен."
     fi
@@ -62,6 +62,10 @@ EOF
     ALTER SCHEMA public OWNER TO $DB_USER;
 EOF
    echo "Права доступа к схеме Public пользователя $DB_USER успешно созданы."
+    
+    echo "Экспорт базы данных примеров постов"
+      export PGPASSWORD="$DB_PASSWORD" && psql -U $DB_USER -h localhost -d $DB_NAME -f ~/$DB_BACKUP > ~/output.log 2>> ~/error.log
+
 
     echo "Проверяем наличие Nginx ..."
      if nginx -v 2>&1 | grep -q "nginx version"; then
@@ -81,7 +85,7 @@ EOF
       else
         echo "Устанавливаем Redis ..."
         #sudo apt update
-        sudo apt install -y redis-server
+        sudo apt install -y redis-server > /dev/null
         sudo systemctl start redis.service
         echo "Redis-server установлен."
       fi
@@ -92,7 +96,7 @@ EOF
       else
         echo "Устанавливаем Java OpenJDK ..."
         #sudo apt update
-        sudo apt install -y openjdk-$JAVA_VERSION_JDK-jdk
+        sudo apt install -y openjdk-$JAVA_VERSION_JDK-jdk > /dev/null
         #sudo systemctl start redis.service
         echo "Java OpenJDK установлен."
       fi
@@ -151,30 +155,18 @@ EOF
     
     #Корректируем .env файла для бэкэнда
 
-    IP=$(hostname -I | awk '{print $2}')
-    #Устанавливаем значение REACT_APP_API_URL в файле .env
-    sed -i "s|^REACT_APP_API_URL=.*|REACT_APP_API_URL=$PROTOCOL://$IP|" $DIR_APP/front-end/.env
-    #Устанавливаем значение REACT_APP_API_PORT в файле .env
-    sed -i "s|^REACT_APP_API_PORT=.*|REACT_APP_API_PORT=$PORT_API|" $DIR_APP/front-end/.env
-
-    echo "Файл .env обновлен: REACT_APP_API_URL=$PROTOCOL://$IP  REACT_APP_API_PORT=$PORT_API"
-
 
 
     echo "Сборка и старт front-end side"
-      cd $DIR_APP/front-end && npm install && npm run build
+      cd $DIR_APP/front-end && npm install && npm run build > /dev/null 2>> error.log
       sudo mkdir -p /var/www/linuxwebserver
       sudo cp -r build/* /var/www/linuxwebserver
       sudo cp ~/$DIR_APP/configNginx80 /etc/nginx/sites-available/default 
       sudo nginx -s reload
 
-    echo "Сборка и старт front-back"
-      cd ~/$DIR_APP/back-end && gradle bootJar
-      env $(cat .env | xargs) java -jar build/libs/ci-back-end-0.0.1-SNAPSHOT.jar
-
-    echo "Экспорт базы данных примеров постов"
-      export PGPASSWORD="$DB_PASSWORD" && psql -U $DB_USER -h localhost -d $DB_NAME -f $DB_BACKUP 2 > /dev/null
-      
-
+    echo "Сборка back-end"
+      cd ~/$DIR_APP/back-end && gradle bootJar > ~/output.log  2>> ~/error.log
+    echo "Старт back-end"
+      env $(cat .env | xargs) java -jar ~/$DIR_APP/back-end/build/libs/ci-back-end-0.0.1-SNAPSHOT.jar > ~/output.log  2>> ~/error.log &
+      cd
     
-
