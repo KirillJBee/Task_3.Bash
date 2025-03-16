@@ -142,6 +142,7 @@ echo "Выгрузка репозитория"
   fi
 
 #Корректируем .env файла для фронтенда
+echo "Корректируем .env файла для фронтенда"
 IP=$(hostname -I | awk '{print $2}')
 #Устанавливаем значение REACT_APP_API_URL в файле .env
 sed -i "s|^REACT_APP_API_URL=.*|REACT_APP_API_URL=$PROTOCOL://$IP|" $DIR_APP/front-end/.env
@@ -151,6 +152,8 @@ sed -i "s|^REACT_APP_API_PORT=.*|REACT_APP_API_PORT=$PORT_API|" $DIR_APP/front-e
 echo "Файл .env обновлен: REACT_APP_API_URL=$PROTOCOL://$IP  REACT_APP_API_PORT=$PORT_API"
     
 #Корректируем .env файла для бэкэнда
+echo "Корректируем .env файла для бэкенда"
+
 sed -i "s|^POSTGRES_HOST=.*|POSTGRES_HOST=$DB_HOST|" ~/$DIR_APP/back-end/.env
 
 sed -i "s|^POSTGRES_PORT=.*|POSTGRES_PORT=$DB_PORT|" ~/$DIR_APP/back-end/.env
@@ -162,6 +165,8 @@ sed -i "s|^POSTGRES_PASSWORD=.*|POSTGRES_PASSWORD=$DB_PASSWORD|" ~/$DIR_APP/back
 sed -i "s|^POSTGRES_DB=.*|POSTGRES_DB=$DB_NAME|" ~/$DIR_APP/back-end/.env
 
 sed -i "s|^SERVER_PORT=.*|SERVER_PORT=$SERVER_PORT|" ~/$DIR_APP/back-end/.env
+
+echo "Файл .env обновлен"
 
 #Сборка и старт front-end side
 echo "Сборка и старт front-end side"
