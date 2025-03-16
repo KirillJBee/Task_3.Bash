@@ -16,10 +16,13 @@ DB_USER="java_user"
 DB_PASSWORD="12345"
 DB_NAME="java_db"
 DB_BACKUP="sample_db.sql"
+DB_HOST="localhost"
+DB_PORT="5432"
 
 #Настройки окружения фронтэнд
 PORT_API="80"
 PROTOCOL="http"
+SERVER_PORT="8081"
 
 
 echo "Проверяем наличие  PostgreSQL..."
@@ -40,9 +43,9 @@ echo "Проверяем наличие  PostgreSQL..."
     # Обновдение базы репозиториев:
     sudo apt-get -qq update
 
-        # Install the latest version of PostgreSQL:
-        #If you want a specific version, use 'postgresql-16' or similar instead of 'postgresql'
-    sudo apt-get -qq -y install postgresql-$PG_VERSION
+    # Install the latest version of PostgreSQL:
+    #If you want a specific version, use 'postgresql-16' or similar instead of 'postgresql'
+    sudo apt-get -qq install -y postgresql-$PG_VERSION > /dev/null
     sudo systemctl start postgresql
     echo "PostgreSQL $PG_VERSION установлен."
   fi
@@ -73,7 +76,7 @@ echo "Проверяем наличие Nginx ..."
   else
     echo "Устанавливаем Nginx ..."
     #sudo apt update
-    sudo get-apt -qq install -y nginx
+    sudo apt-get -qq install -y nginx
     sudo systemctl enable nginx
     sudo systemctl start nginx
     echo "Nginx установлен."
@@ -85,7 +88,7 @@ echo "Проверяем наличие  Redis..."
   else
     echo "Устанавливаем Redis ..."
     #sudo apt update
-    sudo get-apt -qq install -y redis-server
+    sudo apt-get -qq install -y redis-server
     sudo systemctl start redis.service
     echo "Redis-server установлен."
   fi
@@ -95,7 +98,7 @@ echo "Проверяем наличие  Java OpenJDK..."
     echo "$(java -version) уже установлен."
   else
     echo "Устанавливаем Java OpenJDK ..."
-    sudo get-apt -qq install -y openjdk-$JAVA_VERSION_JDK-jdk
+    sudo apt-get -qq install -y openjdk-$JAVA_VERSION_JDK-jdk > /dev/null
     echo "Java OpenJDK установлен."
   fi
 
@@ -147,10 +150,20 @@ sed -i "s|^REACT_APP_API_PORT=.*|REACT_APP_API_PORT=$PORT_API|" $DIR_APP/front-e
 
 echo "Файл .env обновлен: REACT_APP_API_URL=$PROTOCOL://$IP  REACT_APP_API_PORT=$PORT_API"
     
-    #Корректируем .env файла для бэкэнда
+#Корректируем .env файла для бэкэнда
+sed -i "s|^POSTGRES_HOST=.*|POSTGRES_HOST=$DB_HOST|" ~/$DIR_APP/back-end/.env
 
+sed -i "s|^POSTGRES_PORT=.*|POSTGRES_PORT=$DB_PORT|" ~/$DIR_APP/back-end/.env
 
+sed -i "s|^POSTGRES_USER=.*|POSTGRES_USER=$DB_USER|" ~/$DIR_APP/back-end/.env
 
+sed -i "s|^POSTGRES_PASSWORD=.*|POSTGRES_PASSWORD=$DB_PASSWORD|" ~/$DIR_APP/back-end/.env
+
+sed -i "s|^POSTGRES_DB=.*|POSTGRES_DB=$DB_NAME|" ~/$DIR_APP/back-end/.env
+
+sed -i "s|^SERVER_PORT=.*|SERVER_PORT=$SERVER_PORT|" ~/$DIR_APP/back-end/.env
+
+#Сборка и старт front-end side
 echo "Сборка и старт front-end side"
 cd ~/$DIR_APP/front-end && npm install > /dev/null 2>> error.log
 cd ~/$DIR_APP/front-end && npm run build > /dev/null 2>> error.log
@@ -159,8 +172,11 @@ sudo cp -r build/* /var/www/linuxwebserver
 sudo cp ~/$DIR_APP/configNginx80 /etc/nginx/sites-available/default 
 sudo nginx -s reload
 
+#Сборка back-end side
 echo "Сборка back-end side"
 cd ~/$DIR_APP/back-end && gradle bootJar > ~/output.log  2>> ~/error.log
+
+#Старт back-end side
 echo "Старт back-end side"
 env $(cat .env | xargs) java -jar ~/$DIR_APP/back-end/build/libs/ci-back-end-0.0.1-SNAPSHOT.jar > ~/output.log  2>> ~/error.log &
 cd
