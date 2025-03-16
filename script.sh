@@ -214,4 +214,4 @@ echo "Старт back-end side"
 env $(cat .env | xargs) java -jar ~/$DIR_APP/back-end/build/libs/ci-back-end-0.0.1-SNAPSHOT.jar > ~/output.log  2>> ~/error.log &
 cd
 
-echo "Проверить работоспособность приложения можно по адресу $IP или $PROTOCOL://$DOMAIN"
+echo "Проверить работоспособность приложения можно по адресу $PROTOCOL://$IP или $PROTOCOL://$DOMAIN"
