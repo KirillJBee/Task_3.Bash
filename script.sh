@@ -20,9 +20,18 @@ DB_HOST="localhost"
 DB_PORT="5432"
 
 #Настройки окружения фронтэнд
-PORT_API="80"
-PROTOCOL="http"
+PORT_API="443"
+PROTOCOL="https"
 SERVER_PORT="8081"
+
+
+# Параметры для самоподписанного сертификата TLS
+DOMAIN="linuxwebserver.com"
+DAYS=365
+OUTPUT_DIR="/etc/nginx/ssl"
+KEY_FILE="$OUTPUT_DIR/$DOMAIN.key"
+CSR_FILE="$OUTPUT_DIR/$DOMAIN.csr"
+CRT_FILE="$OUTPUT_DIR/$DOMAIN.crt"
 
 
 echo "Проверяем наличие  PostgreSQL..."
@@ -172,9 +181,28 @@ echo "Файл .env обновлен"
 echo "Сборка и старт front-end side"
 cd ~/$DIR_APP/front-end && npm install > /dev/null 2>> error.log
 cd ~/$DIR_APP/front-end && npm run build > /dev/null 2>> error.log
-sudo mkdir -p /var/www/linuxwebserver
-sudo cp -r build/* /var/www/linuxwebserver
-sudo cp ~/$DIR_APP/configNginx80 /etc/nginx/sites-available/default 
+sudo mkdir -p /var/www/$DOMAIN
+sudo cp -r build/* /var/www/$DOMAIN
+
+#Настройка конфигурации сервера Nginx, создание самоподписанного сертифката
+
+sudo mkdir -p "/etc/nginx/ssl"
+
+# Генерация приватного ключа
+sudo openssl genpkey -algorithm RSA -out "$KEY_FILE"
+
+# Генерация CSR (Certificate Signing Request)
+sudo openssl req -new -key "$KEY_FILE" -out "$CSR_FILE" -subj "/CN=$DOMAIN" 
+
+# Генерация самоподписанного сертификата
+sudo openssl x509 -req -days "$DAYS" -in "$CSR_FILE" -signkey "$KEY_FILE" -out "$CRT_FILE" 
+
+# Удаляем CSR файл, так как он больше не нужен
+sudo rm "$CSR_FILE"
+
+echo "Самоподписанный сертификат для $DOMAIN создан в $OUTPUT_DIR"
+
+sudo cp ~/$DIR_APP/configNginx443 /etc/nginx/sites-available/default 
 sudo nginx -s reload
 
 #Сборка back-end side
@@ -185,4 +213,5 @@ cd ~/$DIR_APP/back-end && gradle bootJar > ~/output.log  2>> ~/error.log
 echo "Старт back-end side"
 env $(cat .env | xargs) java -jar ~/$DIR_APP/back-end/build/libs/ci-back-end-0.0.1-SNAPSHOT.jar > ~/output.log  2>> ~/error.log &
 cd
-    
+
+echo "Проверить работоспособность приложения можно по адресу $IP или $PROTOCOL://$DOMAIN"
