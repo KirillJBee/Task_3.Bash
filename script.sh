@@ -152,7 +152,7 @@ echo "Выгрузка репозитория"
 echo "Корректируем .env файла для фронтенда"
 IP=$(hostname -I | awk '{print $2}')
 #Устанавливаем значение REACT_APP_API_URL в файле .env
-sed -i "s|^REACT_APP_API_URL=.*|REACT_APP_API_URL=$PROTOCOL://$IP|" $DIR_APP/front-end/.env
+sed -i "s|^REACT_APP_API_URL=.*|REACT_APP_API_URL=$PROTOCOL://$DOMAIN|" $DIR_APP/front-end/.env $DOMAIN
 #Устанавливаем значение REACT_APP_API_PORT в файле .env
 sed -i "s|^REACT_APP_API_PORT=.*|REACT_APP_API_PORT=$PORT_API|" $DIR_APP/front-end/.env
 
