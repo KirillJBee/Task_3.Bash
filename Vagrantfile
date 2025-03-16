@@ -30,8 +30,8 @@ Vagrant.configure("2") do |config|
 
     # Инсталляция файлового менеджера MC
     config.vm.provision "shell", inline: <<-SHELL
-    sudo apt update && sudo apt -y upgrade
-    sudo apt install -y mc
+    sudo apt-get -qq update && sudo apt-get -qq -y upgrade
+    sudo apt-get -qq install -y mc
     SHELL
 
     # Перенос скачаного архива gradle-8.5-all.zip для ускорения процесса инсталляции :-)
