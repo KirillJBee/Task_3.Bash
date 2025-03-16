@@ -27,8 +27,8 @@ PROTOCOL="http"
         echo "$(psql -V) уже установлен."
     else
         echo "Устанавливаем PostgreSQL ..."
-        sudo apt update > /dev/null
-        sudo apt install -y curl ca-certificates gnupg
+        sudo apt-get -qq update
+        sudo apt-get -qq install -y curl ca-certificates gnupg
 
         # Import the repository signing key:
         sudo install -d /usr/share/postgresql-common/pgdg
@@ -38,7 +38,7 @@ PROTOCOL="http"
         sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
 
         # Update the package lists:
-        sudo apt update > /dev/null
+        sudo apt-get -qq update
 
         # Install the latest version of PostgreSQL:
         #If you want a specific version, use 'postgresql-16' or similar instead of 'postgresql'
@@ -107,7 +107,7 @@ EOF
       else
         if [ -e "gradle-$GRADLE_VERSION-all.zip" ]; then
            sudo mkdir /opt/gradle
-           sudo unzip -d /opt/gradle gradle-$GRADLE_VERSION-all.zip
+           sudo unzip -d /opt/gradle gradle-$GRADLE_VERSION-all.zip > /dev/null
            echo "export PATH=$PATH:/opt/gradle/gradle-$GRADLE_VERSION/bin" >> ~/.bashrc
            source ~/.bashrc
            echo "Устанавливаем Gradle $GRADLE_VERSION ..."
@@ -158,15 +158,16 @@ EOF
 
 
     echo "Сборка и старт front-end side"
-      cd $DIR_APP/front-end && npm install && npm run build > /dev/null 2>> error.log
+      cd ~/$DIR_APP/front-end && npm install > /dev/null 2>> error.log
+      cd ~/$DIR_APP/front-end && npm run build > /dev/null 2>> error.log
       sudo mkdir -p /var/www/linuxwebserver
       sudo cp -r build/* /var/www/linuxwebserver
       sudo cp ~/$DIR_APP/configNginx80 /etc/nginx/sites-available/default 
       sudo nginx -s reload
 
-    echo "Сборка back-end"
+    echo "Сборка back-end side"
       cd ~/$DIR_APP/back-end && gradle bootJar > ~/output.log  2>> ~/error.log
-    echo "Старт back-end"
+    echo "Старт back-end side"
       env $(cat .env | xargs) java -jar ~/$DIR_APP/back-end/build/libs/ci-back-end-0.0.1-SNAPSHOT.jar > ~/output.log  2>> ~/error.log &
       cd
     
