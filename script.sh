@@ -212,4 +212,9 @@ echo "Старт back-end side"
 env $(cat .env | xargs) java -jar ~/$DIR_APP/back-end/build/libs/ci-back-end-0.0.1-SNAPSHOT.jar > ~/output.log  2>> ~/error.log &
 cd
 
+#Настройка Firewall
+echo "Настройка firewall"
+sudo ufw allow "Nginx Full" && sudo ufw allow "Open SSH" && sudo ufw enable
+echo "Текущее состояние Firewall: $(sudo ufw status verbose)"
+
 echo "Проверить работоспособность приложения можно по адресу $PROTOCOL://$IP или $PROTOCOL://$DOMAIN"
