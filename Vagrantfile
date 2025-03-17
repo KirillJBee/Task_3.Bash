@@ -19,7 +19,7 @@ Vagrant.configure("2") do |config|
     echo "user ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/user
     SHELL
     
-    # Добавление SSH-ключа для пользователя 'user'
+    #Добавление SSH-ключа для пользователя 'user'
     config.vm.provision "shell", inline: <<-SHELL
     sudo mkdir -p /home/user/.ssh
     echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJYr423a9ByX9kAqD5OcukDT3kz6dmrCdid9Nn/gmPpv" >> /home/user/.ssh/authorized_keys

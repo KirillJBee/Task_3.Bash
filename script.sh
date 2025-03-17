@@ -30,7 +30,7 @@ KEY_FILE="$OUTPUT_DIR/$DOMAIN.key"
 CSR_FILE="$OUTPUT_DIR/$DOMAIN.csr"
 CRT_FILE="$OUTPUT_DIR/$DOMAIN.crt"
 
-
+#Конфигурация сервера
 echo "Проверяем наличие  PostgreSQL..."
   if psql -V 2>/dev/null | grep -q "PostgreSQL"; then
     echo "$(psql -V) уже установлен."
