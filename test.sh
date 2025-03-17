@@ -1,7 +1,0 @@
-#!/bin/bash
-
-DB_PASSWORD="12345"
-
-export PGPASSWORD="$DB_PASSWORD"
-
-echo "$PGPASSWORD"

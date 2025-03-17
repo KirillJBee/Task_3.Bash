@@ -51,7 +51,7 @@ echo "Проверяем наличие  PostgreSQL..."
 
     # Install the latest version of PostgreSQL:
     #If you want a specific version, use 'postgresql-16' or similar instead of 'postgresql'
-    sudo apt-get -qq install -y postgresql-$PG_VERSION > /dev/null
+    sudo apt-get -qq install -y postgresql-$PG_VERSION >> $HOME/output.log
     sudo systemctl start postgresql
     echo "PostgreSQL $PG_VERSION установлен."
   fi
@@ -73,7 +73,7 @@ EOF
    echo "Права доступа к схеме Public пользователя $DB_USER успешно созданы."
     
 echo "Экспорт базы данных примеров постов"
-export PGPASSWORD="$DB_PASSWORD" && psql -U $DB_USER -h localhost -d $DB_NAME -f ~/$DB_BACKUP > ~/output.log 2>> ~/error.log
+export PGPASSWORD="$DB_PASSWORD" && psql -U $DB_USER -h localhost -d $DB_NAME -f $HOME/$DB_BACKUP >> $HOME/output.log 2>> $HOME/error.log
 
 
 echo "Проверяем наличие Nginx ..."
@@ -104,7 +104,7 @@ echo "Проверяем наличие  Java OpenJDK..."
     echo "$(java -version) уже установлен."
   else
     echo "Устанавливаем Java OpenJDK ..."
-    sudo apt-get -qq install -y openjdk-$JAVA_VERSION_JDK-jdk > /dev/null
+    sudo apt-get -qq install -y openjdk-$JAVA_VERSION_JDK-jdk >> $HOME/output.log
     echo "Java OpenJDK установлен."
   fi
 
@@ -114,16 +114,16 @@ echo "Проверяем наличие  Gradle..."
   else
     if [ -e "gradle-$GRADLE_VERSION-all.zip" ]; then
       sudo mkdir /opt/gradle
-      sudo unzip -d /opt/gradle gradle-$GRADLE_VERSION-all.zip > /dev/null
-      echo "export PATH=$PATH:/opt/gradle/gradle-$GRADLE_VERSION/bin" >> ~/.bashrc
-      source ~/.bashrc
+      sudo unzip -d /opt/gradle gradle-$GRADLE_VERSION-all.zip >> $HOME/output.log
+      echo "export PATH=$PATH:/opt/gradle/gradle-$GRADLE_VERSION/bin" >> $HOME/.bashrc
+      source $HOME/.bashrc
       echo "Устанавливаем Gradle $GRADLE_VERSION ..."
   else
     wget https://services.gradle.org/distributions/gradle-$GRADLE_VERSION-all.zip
     sudo mkdir /opt/gradle
     sudo unzip -d /opt/gradle gradle-$GRADLE_VERSION-all.zip > /dev/null
-    echo "export PATH=$PATH:/opt/gradle/gradle-$GRADLE_VERSION/bin" >> ~/.bashrc
-    source ~/.bashrc
+    echo "export PATH=$PATH:/opt/gradle/gradle-$GRADLE_VERSION/bin" >> $HOME/.bashrc
+    source $HOME/.bashrc
       echo "Gradle $GRADLE_VERSION установлен."
     fi
   fi
@@ -134,8 +134,8 @@ echo "Проверяем наличие  NodeJS..."
   else
     echo "Устанавливаем NodeJS $NODE_VERSION ..."
     curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
-    source ~/.bashrc
-    nvm install $NODE_VERSION > /dev/null
+    source $HOME/.bashrc
+    nvm install $NODE_VERSION >> $HOME/output.log
     echo "NodeJS $NODE_VERSION установлен."
   fi
     
@@ -160,24 +160,24 @@ echo "Файл .env обновлен: REACT_APP_API_URL=$PROTOCOL://$IP  REACT_A
 #Корректируем .env файла для бэкэнда
 echo "Корректируем .env файла для бэкенда"
 
-sed -i "s|^POSTGRES_HOST=.*|POSTGRES_HOST=$DB_HOST|" ~/$DIR_APP/back-end/.env
+sed -i "s|^POSTGRES_HOST=.*|POSTGRES_HOST=$DB_HOST|" $HOME/$DIR_APP/back-end/.env
 
-sed -i "s|^POSTGRES_PORT=.*|POSTGRES_PORT=$DB_PORT|" ~/$DIR_APP/back-end/.env
+sed -i "s|^POSTGRES_PORT=.*|POSTGRES_PORT=$DB_PORT|" $HOME/$DIR_APP/back-end/.env
 
-sed -i "s|^POSTGRES_USER=.*|POSTGRES_USER=$DB_USER|" ~/$DIR_APP/back-end/.env
+sed -i "s|^POSTGRES_USER=.*|POSTGRES_USER=$DB_USER|" $HOME/$DIR_APP/back-end/.env
 
-sed -i "s|^POSTGRES_PASSWORD=.*|POSTGRES_PASSWORD=$DB_PASSWORD|" ~/$DIR_APP/back-end/.env
+sed -i "s|^POSTGRES_PASSWORD=.*|POSTGRES_PASSWORD=$DB_PASSWORD|" $HOME/$DIR_APP/back-end/.env
 
-sed -i "s|^POSTGRES_DB=.*|POSTGRES_DB=$DB_NAME|" ~/$DIR_APP/back-end/.env
+sed -i "s|^POSTGRES_DB=.*|POSTGRES_DB=$DB_NAME|" $HOME/$DIR_APP/back-end/.env
 
-sed -i "s|^SERVER_PORT=.*|SERVER_PORT=$SERVER_PORT|" ~/$DIR_APP/back-end/.env
+sed -i "s|^SERVER_PORT=.*|SERVER_PORT=$SERVER_PORT|" $HOME/$DIR_APP/back-end/.env
 
 echo "Файл .env обновлен"
 
 #Сборка и старт front-end side
 echo "Сборка и старт front-end side"
-cd ~/$DIR_APP/front-end && npm install > /dev/null 2>> error.log
-cd ~/$DIR_APP/front-end && npm run build > /dev/null 2>> error.log
+cd $HOME/$DIR_APP/front-end && npm install >> $HOME/output.log 2>> error.log
+cd $HOME/$DIR_APP/front-end && npm run build >> $HOME/output.log 2>> error.log
 sudo mkdir -p /var/www/$DOMAIN
 sudo cp -r build/* /var/www/$DOMAIN
 
@@ -199,21 +199,26 @@ sudo rm "$CSR_FILE"
 
 echo "Самоподписанный сертификат для $DOMAIN создан в $OUTPUT_DIR"
 
-sudo cp ~/$DIR_APP/configNginx443 /etc/nginx/sites-available/default 
+sudo cp $HOME/$DIR_APP/configNginx443 /etc/nginx/sites-available/default 
 sudo nginx -s reload
 
 #Сборка back-end side
 echo "Сборка back-end side"
-cd ~/$DIR_APP/back-end && gradle bootJar > ~/output.log  2>> ~/error.log
+cd $HOME/$DIR_APP/back-end && gradle bootJar >> $HOME/output.log  2>> $HOME/error.log
 
 #Старт back-end side
 echo "Старт back-end side"
-env $(cat .env | xargs) java -jar ~/$DIR_APP/back-end/build/libs/ci-back-end-0.0.1-SNAPSHOT.jar > ~/output.log  2>> ~/error.log &
+env $(cat .env | xargs) java -jar $HOME/$DIR_APP/back-end/build/libs/ci-back-end-0.0.1-SNAPSHOT.jar >> $HOME/output.log  2>> $HOME/error.log &
 cd
 
 #Настройка Firewall
 echo "Настройка firewall"
-sudo ufw allow "Nginx Full" && sudo ufw allow tcp22 && sudo ufw enable
+
+sudo ufw allow 80/tcp && sudo ufw allow 22/tcp && sudo ufw allow 443/tcp 
+
+# Включаем UFW без запроса подтверждения
+echo "y" | sudo ufw enable
+
 echo "Текущее состояние Firewall: $(sudo ufw status verbose)"
 
 echo "Проверить работоспособность приложения можно по адресу $PROTOCOL://$IP или $PROTOCOL://$DOMAIN"
