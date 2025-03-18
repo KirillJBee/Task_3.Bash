@@ -65,8 +65,8 @@ EOF
 echo "Пользователь $DB_USER и база данных $DB_NAME успешно созданы."
 
 echo "Настройка прав доступа к схеме Public пользователя $DB_USER"
-sudo -u postgres psql -U postgres -d java_db <<EOF
-GRANT ALL ON SCHEMA public TO $DB_USER ;
+sudo -u postgres psql -U postgres -d $DB_NAME <<EOF
+GRANT ALL ON SCHEMA public TO $DB_USER;
 GRANT CREATE ON SCHEMA public TO $DB_USER;
 ALTER SCHEMA public OWNER TO $DB_USER;
 EOF
